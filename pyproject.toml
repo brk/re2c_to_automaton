@@ -1,0 +1,7 @@
+[project]
+name = "re2c-to-automaton"
+version = "0.1.0"
+description = "Imports re2c DFAs (via graphviz) to automata-lib"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []

@@ -133,17 +133,18 @@ def obtain_re2c_dot_output(filename: str, utf8: bool) -> Optional[str]:
 
 
 def parsed_dfa_to_automaton(pdfa: ParsedDFA) -> DFA:
+    mk_state = lambda x: str(x)
     states = set()
     input_symbols = set()
-    final_states = set(n[0] for n in pdfa.finalnodes)
+    final_states = set(mk_state(n[0]) for n in pdfa.finalnodes)
     nonstarters = set()
 
     for t in pdfa.transitions:
-        states.add(t.src)
-        states.add(t.dst)
+        states.add(mk_state(t.src))
+        states.add(mk_state(t.dst))
         for x in t.chars:
-            input_symbols.add(x)
-        nonstarters.add(t.dst)
+            input_symbols.add(chr(x))
+        nonstarters.add(mk_state(t.dst))
 
     transitions = {state: {} for state in states}
 
@@ -154,13 +155,14 @@ def parsed_dfa_to_automaton(pdfa: ParsedDFA) -> DFA:
             transitions[fs][sym] = fs
 
     for t in pdfa.transitions:
+        src = mk_state(t.src)
         # empty set here means unconditional transition, not missing!
         if len(t.chars) == 0:
             for sym in input_symbols:
-                transitions[t.src][sym] = t.dst
+                transitions[src][sym] = mk_state(t.dst)
         else:
             for sym in t.chars:
-                transitions[t.src][sym] = t.dst
+                transitions[src][chr(sym)] = mk_state(t.dst)
 
     starters = list(states - nonstarters)
     if len(starters) > 1:
@@ -215,9 +217,22 @@ def main(filename: str, dump: bool):
     if len(parsed) == 2:
         a = parsed_dfa_to_automaton(parsed[0])
         z = parsed_dfa_to_automaton(parsed[1])
-        # equiv = a.difference(z).isempty() and z.difference(a).isempty()
-        equiv = a.union(z) == a and z.union(a) == z
-        print("DFAs equivalent?", equiv)
+
+        zad = z.difference(a)
+        if not zad.isempty():
+            click.echo("smallest non-empty string accepted by only first automaton:")
+            click.echo(zad.successor("", strict=True))
+
+        adz = a.difference(z)
+        if not adz.isempty():
+            click.echo("smallest non-empty string accepted by only second automaton:")
+            click.echo(adz.successor("", strict=True))
+
+        equiv1 = a.union(z) == a and z.union(a) == z
+        equiv2 = adz.isempty() and zad.isempty()
+        assert equiv1 == equiv2
+
+        print("DFAs equivalent?", equiv1)
 
 
 if __name__ == "__main__":
@@ -225,8 +240,8 @@ if __name__ == "__main__":
 
 
 def test_range_parsing():
-    assert parse_char_range("[b]") == set([ord("b")])
-    assert len(parse_char_range("[0x00-0x03][0x05-0x07]")) == 7
-    assert len(parse_char_range("[a-c][e-g]")) == 6
-    assert len(parse_char_range("[0x00-0xFF]")) == 256
-    assert len(parse_char_range("[0x00-a][c-0xFF]")) == 255
+    assert parse_char_ranges("[b]") == set([ord("b")])
+    assert len(parse_char_ranges("[0x00-0x03][0x05-0x07]")) == 7
+    assert len(parse_char_ranges("[a-c][e-g]")) == 6
+    assert len(parse_char_ranges("[0x00-0xFF]")) == 256
+    assert len(parse_char_ranges("[0x00-a][c-0xFF]")) == 255

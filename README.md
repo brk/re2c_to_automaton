@@ -1,7 +1,7 @@
 Probably easiest to use `uv`:
 
 ```sh
-❯ git clone 
+❯ git clone https://github.com/brk/re2c_to_automaton.git
 Cloning into 're2c_to_automaton'...
 [...]
 

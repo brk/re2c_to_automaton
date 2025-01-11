@@ -14,7 +14,22 @@ Installed 11 packages in 27ms
 DFAs equivalent? True
 
 ❯ uv run python equivcheck.py examples/ne/aba02.re
+smallest non-empty string accepted by only first automaton:
+aab
+smallest non-empty string accepted by only second automaton:
+aba
 DFAs equivalent? False
+
+❯ cat examples/ne/aba02.re
+/*!re2c
+    "a" {0,2} "b"?   {}
+    [^] {}
+*/
+
+/*!re2c
+    "a"? "b"? "a"?   {}
+    [^] {}
+*/
 ```
 
 No features beyond equivalence checking implemented yet.
